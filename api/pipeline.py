@@ -1,6 +1,6 @@
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForTokenClassification
-from .dbo import TextPrediction
+from .dto import TextPrediction
 
 # should be global because have to acts as a static variable (don't perform model creation per func call)
 tokenizer = AutoTokenizer.from_pretrained('weights/', local_files_only=True, use_fast=True)
@@ -11,6 +11,11 @@ def predict(text: str):
     return pipe(text)
 
 def token_prediction_to_words(predictions):
+    """
+    Convert NER pipeline predictions from per token prediction to
+    per word prediction. Return list of TextPrediction.
+    """
+
     text_predictions = []
     for pred in predictions:
         end = pred["start"] + len(pred["word"].replace("##", ""))
@@ -26,4 +31,4 @@ def token_prediction_to_words(predictions):
                     end = end,
                     score = pred["score"]))
 
-    return
+    return text_predictions

@@ -1,7 +1,7 @@
 import torch
 from fastapi import FastAPI
 
-from .dbo import TextPredictionRequest, TextPredictionResponse
+from .dto import TextPredictionRequest, TextPredictionResponse
 from .pipeline import predict, token_prediction_to_words
 
 app = FastAPI()
