@@ -5,6 +5,6 @@ datasets==2.14.3
 evaluate==0.4.0
 uvicorn[standard]==0.23.2
 fastapi==0.100.1
-aiofiles=23.1.0
+aiofiles==23.1.0
 python_multipart==0.0.6
 seqeval==1.2.2
