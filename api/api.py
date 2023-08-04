@@ -7,8 +7,7 @@ from .pipeline import predict, load_csv_dataset, compute_ner_metrics
 
 app = FastAPI()
 
-# @app.get("/predict/", response_model=TextPredictionResponse)
-@app.get("/predict/")
+@app.get("/predict/", response_model=TextPredictionResponse)
 async def predict_str(request: TextPredictionRequest):
     """
     Perform prediction for the simple string. Returns words with labels and
@@ -31,25 +30,46 @@ async def predict_str(request: TextPredictionRequest):
 
 @app.post("/evaluate/", response_model=EvaluationResponse)
 async def evaluate_csv(csv_file: UploadFile,
-                       is_word_splitted: bool | None = True,
-                       use_nocll_id2label: bool | None = True):
+                       start_idx: int | None = None, end_idx: int | None = None,
+                       seq_separator : str = ' ',
+                       use_conll_id2label: bool = True):
+    """
+    Perform evaluation for the given CSV file. CSV file has to contain tokens and ner_tags columns
+    which consists of sequence of word / labels (up to 9, should correspond to nocll dataset labels)
+    respectively. Since model has changed id2label mapping user can set additional parameter which
+    corresponds to this mapping: whether or not use standard nocll or model specifi one.
+    seq_separator parameter corresponds to the separator which used to separate values in tokens and ner_tags
+    sequence in the CSV file. With start_idx an end_idx parameter user can specify row range for evaluation.
+    """
+
     if not csv_file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail='Invalid file format. Only CSV Files accepted.')
 
+    # simple check whether we have required columns
     first_line = csv_file.file.readline().decode('utf-8')[:-1]
     col_names = first_line.split(',')
     if 'tokens' not in col_names or 'ner_tags' not in col_names:
         raise HTTPException(status_code=400, detail='Wrong structure of the file. CSV File has to contain tokens and ner_tags columns.')
 
+    if start_idx and end_idx:
+        if start_idx > end_idx:
+            raise HTTPException(status_code=400, detail='start_idx can not be greater than end_idx')
+
+    # save file locally, because datasets csv reader cannot read from stream
     temp_path = f'/tmp/{csv_file.filename}_{str(time.time())}_{str(random.random())}'
     csv_file.file.seek(0)
     async with aiofiles.open(temp_path, 'wb') as out_file:
         while content := await csv_file.read(1024):
             await out_file.write(content)
 
-    ds = load_csv_dataset(temp_path, is_word_splitted, use_nocll_id2label)
+    # perform actual computation
+    ds = load_csv_dataset(temp_path, use_conll_id2label, seq_separator, start_idx, end_idx)
+    if (len(ds) == 0):
+        raise HTTPException(status_code=400, detail='Evaluation range is empty. Please check start and end indices')
+
     metrics = compute_ner_metrics(ds)
 
+    # convert metric result to EvaluationResponse
     f1_dict = {}
     recall_dict = {}
     precision_dict = {}
@@ -64,7 +84,7 @@ async def evaluate_csv(csv_file: UploadFile,
                 f1_dict['overall'] = v
             elif metric_name == 'recall':
                 recall_dict['overall'] = v
-        else:
+        elif isinstance(v, dict):
             for metric_name, val in v.items():
                 if metric_name == 'precision':
                     precision_dict[k] = val
