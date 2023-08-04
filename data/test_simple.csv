@@ -1,0 +1,3 @@
+tokens,ner_tags
+"['My' 'name' 'is' 'Oleh' 'I' 'live' 'in' 'Dresden']",[0 0 0 1 0 0 0 5]
+"['My' 'name' 'is' 'Petro' 'I' 'live' 'in' 'the' 'United' 'States']",[0 0 0 1 0 0 0 0 5 6]

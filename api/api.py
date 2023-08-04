@@ -40,6 +40,12 @@ async def evaluate_csv(csv_file: UploadFile,
     corresponds to this mapping: whether or not use standard nocll or model specifi one.
     seq_separator parameter corresponds to the separator which used to separate values in tokens and ner_tags
     sequence in the CSV file. With start_idx an end_idx parameter user can specify row range for evaluation.
+
+    :param csv_file: CSV file itself with tokens and ner_tags columns
+    :param start_idx: index of the first row (except header) which will be used for evaluation
+    :param end_idx: index of the last row (except header) which will be used for evaluation
+    :param seq_separator: separator which separates tokens and tags in tokens and ner_tags columns in the CSV file
+    :param use_conll_id2label: whether or not id of labels in CSV file corresponds to conll dataset or to model mapping
     """
 
     if not csv_file.filename.endswith('.csv'):
