@@ -23,5 +23,4 @@ even test some queries (or at least generate the curl command, sometimes Swagger
 # Limitations
 Current implementation has several limitations:
 
-- Evaluation can takes a long time and since it can not be implemented as an async function may freeze the server. Alternative: return user a token which can be used for retrieving the evaluation result after their will be computed in the background.
 - Current docker image is optimized (in terms of size) for CPU and doesn't support GPU computation (even if NVIDIA runtime for docker is installed) since I don't have a suitable GPU to test it. In order to enable GPU support one can change the base image of docker container to `huggingface/transformers-pytorch-gpu` and delete first 3 line of the `requirements.txt` file.

@@ -3,13 +3,18 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification
 from datasets import load_dataset, Sequence, Value, ClassLabel
 from evaluate import load, evaluator
 
-# should be global because have to act as a static variable (don't perform model creation per func call)
-tokenizer = AutoTokenizer.from_pretrained('weights/', local_files_only=True, use_fast=True)
-model = AutoModelForTokenClassification.from_pretrained('weights/', local_files_only=True)
-pipe = pipeline('token-classification', model=model, tokenizer=tokenizer)
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def load_pipeline():
+    tokenizer = AutoTokenizer.from_pretrained('weights/', local_files_only=True, use_fast=True)
+    model = AutoModelForTokenClassification.from_pretrained('weights/', local_files_only=True)
+    pipe = pipeline('token-classification', model=model, tokenizer=tokenizer)
+    return pipe
 
 def predict(text):
     # average is important since we would like to have the same prediction for the whole word
+    pipe = load_pipeline()
     return pipe(text, aggregation_strategy='average')
 
 def load_csv_dataset(path, use_conll_id2label, seq_separator, start_idx, end_idx):
@@ -37,6 +42,8 @@ def load_csv_dataset(path, use_conll_id2label, seq_separator, start_idx, end_idx
         return {"tokens": tokens, "ner_tags": tags}
     ds = ds.map(str_to_seq)
 
+    model = load_pipeline().model
+
     # evaluator requires specific types of column, so we have to cast
     ds = ds.cast_column('tokens', Sequence(Value('string')))
     class_names = list(model.config.id2label.values())
@@ -47,6 +54,7 @@ def load_csv_dataset(path, use_conll_id2label, seq_separator, start_idx, end_idx
 def compute_ner_metrics(dataset):
     seqeval = load('seqeval')
     metric_eval = evaluator('token-classification')
+    pipe = load_pipeline()
 
     eval_results = metric_eval.compute(model_or_pipeline=pipe, data=dataset, metric=seqeval)
 

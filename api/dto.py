@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
-__all__ = ['TextPredictionRequest', 'TextPrediction', 'TextPredictionResponse', 'EvaluationResponse']
+__all__ = ['TextPredictionRequest', 'TextPrediction', 'TextPredictionResponse',
+           'EvaluationResponse', 'EvaluationPostResponse']
 
 class TextPredictionRequest(BaseModel):
     text: str
@@ -14,6 +15,9 @@ class TextPrediction(BaseModel):
 
 class TextPredictionResponse(BaseModel):
     predictions: list[TextPrediction]
+
+class EvaluationPostResponse(BaseModel):
+    token: str
 
 class EvaluationResponse(BaseModel):
     f1: dict[str, float]
