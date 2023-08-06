@@ -2,14 +2,16 @@ from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from datasets import load_dataset, Sequence, Value, ClassLabel
 from evaluate import load, evaluator
-
 from functools import lru_cache
+
+from config import config
+
 
 @lru_cache(maxsize=1)
 def load_pipeline():
-    tokenizer = AutoTokenizer.from_pretrained('weights/', local_files_only=True, use_fast=True)
-    model = AutoModelForTokenClassification.from_pretrained('weights/', local_files_only=True)
-    pipe = pipeline('token-classification', model=model, tokenizer=tokenizer)
+    tokenizer = AutoTokenizer.from_pretrained(config.WEIGHT_DIR, local_files_only=True, use_fast=True)
+    model = AutoModelForTokenClassification.from_pretrained(config.WEIGHT_DIR, local_files_only=True)
+    pipe = pipeline('token-classification', model=model, tokenizer=tokenizer, device=config.DEVICE)
     return pipe
 
 def predict(text):
@@ -56,6 +58,8 @@ def compute_ner_metrics(dataset):
     metric_eval = evaluator('token-classification')
     pipe = load_pipeline()
 
-    eval_results = metric_eval.compute(model_or_pipeline=pipe, data=dataset, metric=seqeval)
+    device = config.DEVICE if config.DEVICE != 'cpu' else None
+    eval_results = metric_eval.compute(model_or_pipeline=pipe, data=dataset,
+                                       metric=seqeval, device=device)
 
     return eval_results

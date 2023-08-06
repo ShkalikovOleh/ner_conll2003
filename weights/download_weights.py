@@ -1,8 +1,11 @@
-from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 
-tokenizer = AutoTokenizer.from_pretrained('dslim/bert-base-NER')
-model = AutoModelForTokenClassification.from_pretrained('dslim/bert-base-NER')
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from config import config
 
-tokenizer.save_pretrained('weights/')
-model.save_pretrained('weights/')
+tokenizer = AutoTokenizer.from_pretrained(config.MODEL)
+model = AutoModelForTokenClassification.from_pretrained(config.MODEL)
+
+tokenizer.save_pretrained(config.WEIGHT_DIR)
+model.save_pretrained(config.WEIGHT_DIR)
