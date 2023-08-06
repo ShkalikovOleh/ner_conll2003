@@ -72,7 +72,7 @@ def evaluation_task(path, start_idx, end_idx, seq_separator, use_conll_id2label)
     eval_store.write(path, result)
 
 
-@app.post("/evaluate/", response_model=EvaluationPostResponse)
+@app.post("/evaluate/", response_model=EvaluationPostResponse, status_code=202)
 async def evaluate_csv(background_tasks: BackgroundTasks,
                        csv_file: UploadFile,
                        start_idx: int | None = None, end_idx: int | None = None,
@@ -134,7 +134,16 @@ async def get_eval_result(token: str):
     try:
         response = eval_store.get(token)
     except ValueError:
-        raise HTTPException(status_code=400,
+        raise HTTPException(status_code=404,
                             detail='Token not found. Probably evaluation has not been completed')
 
     return response
+
+@app.delete("/evaluate/")
+async def delete_eval_result(token: str):
+    """
+    Delete evaluation reselt from the storage
+    """
+
+    eval_store = load_eval_store()
+    return eval_store.delete(token)
