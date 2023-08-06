@@ -17,7 +17,7 @@ def load_pipeline():
 def predict(text):
     # average is important since we would like to have the same prediction for the whole word
     pipe = load_pipeline()
-    return pipe(text, aggregation_strategy='average')
+    return pipe(text, aggregation_strategy='first')
 
 def load_csv_dataset(path, use_conll_id2label, seq_separator, start_idx, end_idx):
     ds = load_dataset('csv', data_files={'test': path})['test'] # load_datasets always want to create splits
@@ -58,7 +58,7 @@ def compute_ner_metrics(dataset):
     metric_eval = evaluator('token-classification')
     pipe = load_pipeline()
 
-    device = config.DEVICE if config.DEVICE != 'cpu' else None
+    device = 0 if config.DEVICE != 'cpu' else -1
     eval_results = metric_eval.compute(model_or_pipeline=pipe, data=dataset,
                                        metric=seqeval, device=device)
 
